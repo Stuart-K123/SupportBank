@@ -1,16 +1,53 @@
 // SupportBank main code
+const log4js = require('log4js')
+
+log4js.configure({
+    appenders: {
+        file: { type: 'fileSync', filename: 'logs/debug.log' }
+    },
+    categories: {
+        default: { appenders: ['file'], level: 'debug'}
+    }
+});
+
+const logger = log4js.getLogger('SupportBank.js')
 
 const csv = require('csv-parser')
 const fs = require('fs')
 const readlineSync = require('readline-sync')
 
+const file_name = "Transactions2014.csv"
+
 let transactions = []
 
-function read_csv() {
+class transaction {
+    constructor(date, from, to, narrative, amount) {
+        this.date = date
+        this.from = from
+        this.to = to
+        this.narrative = narrative
+        this.amount = amount
+    }
+
+    static from_object(object) {
+        let date = object.Date
+        let from = object.From
+        let to = object.To
+        let narrative = object.Narrative
+        let amount = +object.Amount
+        if (amount == NaN) {
+            logger.warn("Amount field in transaction is not a number so cannot be interpreted as transaction:", object)
+            return -1
+        }
+        return new transaction(date, from, to, narrative, amount)
+    }
+}
+
+function transactions_from_csv() {
     return new Promise(function (resolve, reject) {
-        fs.createReadStream('Transactions2014.csv')
+        fs.createReadStream(file_name)
             .pipe(csv())
-            .on('data', (data) => transactions.push(data))
+            .on('data', (data) => {transactions.push(transaction.from_object(data))})
             .on('end', () => {
                 resolve(transactions)
             })
@@ -22,6 +59,16 @@ class personal_account {
         this.name = name
         this.balance = 0.0
         this.transaction_log = []
+    }
+
+    update_balance(value, receiver) {
+        let _num_value = 0
+        if (receiver) {_num_value = +value}
+        else {_num_value = -value}
+        if (_num_value == NaN) {
+            logger.error(`Transaction value ${value} is not a number. This error should not appear`)
+        }
+        this.balance += _num_value
     }
 
     print_balance() {
@@ -48,6 +95,22 @@ class transaction_log_entry {
         this.narrative = narrative
     }
 
+    static from_transaction(transaction, receiver) {
+        let amount = 0.0
+        let person = ""
+        let date = transaction.date
+        let narrative = transaction.narrative
+        if (receiver) {
+            amount = transaction.amount
+            person = transaction.from
+        }
+        else {
+            amount = -transaction.amount
+            person = transaction.to
+        }
+        return new transaction_log_entry(amount, person, date, narrative)
+    }
+
     print() {
         console.log(`Date: ${this.date}, Person: ${this.person}, Amount: £${this.amount}, Purpose: ${this.narrative}`)
     }
@@ -55,92 +118,71 @@ class transaction_log_entry {
 
 function get_all_accounts(transactions) {
     let accounts = new Map()
-    // console.log(transactions.length)
-    for (let i=0; i<transactions.length; i++) {
-        accounts = process_single_transaction(transactions[i], accounts)
-    }
+    transactions.forEach((transaction) =>  {
+        accounts = process_single_transaction(transaction, accounts)
+    })
     return accounts
 }
 
-function process_single_transaction(transaction, accounts) {
-    // Check accounts exits, make them if required
-    if (! accounts.has(transaction.From)) {
-        accounts.set(transaction.From, new personal_account(transaction.From))
+function process_single_transaction(trans, accounts) {
+    // Check accounts exist, make them if required
+    if (! accounts.has(trans.from)) {
+        accounts.set(trans.from, new personal_account(trans.from))
     }
-    if (! accounts.has(transaction.To)) {
-        accounts.set(transaction.To, new personal_account(transaction.To))
+    if (! accounts.has(trans.to)) {
+        accounts.set(trans.to, new personal_account(trans.to))
     }
 
     // Update balances
-    accounts.get(transaction.From).balance -= parseFloat(transaction.Amount)
-    accounts.get(transaction.To).balance += parseFloat(transaction.Amount)
+    accounts.get(trans.from).update_balance(trans.amount, false)
+    accounts.get(trans.to).update_balance(trans.amount, true)
 
     // Log transactions
-    accounts.get(transaction.From).transaction_log.push(new transaction_log_entry(-transaction.Amount,
-        transaction.To,
-        transaction.Date,
-        transaction.Narrative))
-    accounts.get(transaction.To).transaction_log.push(new transaction_log_entry(transaction.Amount,
-        transaction.From,
-        transaction.Date,
-        transaction.Narrative))
+    accounts.get(trans.from).transaction_log.push(transaction_log_entry.from_transaction(trans, false))
+    accounts.get(trans.to).transaction_log.push(transaction_log_entry.from_transaction(trans, true))
     return accounts
 }
-
-
-// List all functionality
-function list_all(transactions) {
-    accounts = get_all_accounts(transactions)
-    accounts.forEach((account) => {account.print_balance()})
-}
-
-function list_all_wrap() {
-    read_csv().then((transactions) => list_all(transactions))
-}
-
-// list_all_wrap()
 
 // List account
 function get_account(transactions, name) {
     let account = new personal_account(name)
-    for (let t of transactions) {
-        if (t.From == name) {
-            account.balance -= +(t.Amount)
-            account.transaction_log.push(new transaction_log_entry(-t.Amount,
-                t.To,
-                t.Date,
-                t.Narrative))
+    transactions.forEach((t) => {
+        if (t.from == name) {
+            account.update_balance(t.amount, false)
+            account.transaction_log.push(transaction_log_entry.from_transaction(t, false))
         }
-        else if (t.To == name) {
-            account.balance += parseFloat(t.Amount)
-            account.transaction_log.push(new transaction_log_entry(+t.Amount,
-                t.From,
-                t.Date,
-                t.Narrative))
+        else if (t.to == name) {
+            account.update_balance(t.amount, true)
+            account.transaction_log.push(transaction_log_entry.from_transaction(t, true))
         }
-    }
+    })
     return account
 }
 
-function list_account(transactions, name) {
-    let account = get_account(transactions, name)
-    account.print_log()
+// List all functionality
+function list_all() {
+    transactions_from_csv().then((transactions) => {
+        let accounts = get_all_accounts(transactions)
+        accounts.forEach((account) => {account.print_balance()})
+    })
 }
 
-function list_account_wrap(name) {
-    read_csv().then((transactions => list_account(transactions, name)))
+function list_account(name) {
+    transactions_from_csv().then((transactions) => {
+        // console.log(transactions)
+        let account = get_account(transactions, name)
+        account.print_log()
+    })
 }
 
-// list_account_wrap("Tim L")
-
-function main(){
+function main() {
     console.log("Hi! how would you like to inspect the transactions?")
     let user_input = readlineSync.question("\"List All\", \"List [Name]\", or \"exit\": ")
     if (user_input == "List All") {
-        list_all_wrap()
+        list_all()
     }
     else if (user_input.slice(0,5) == "List ") {
-        list_account_wrap(user_input.slice(5))
+        list_account(user_input.slice(5))
     }
     else if (user_input == "exit") {
         return
