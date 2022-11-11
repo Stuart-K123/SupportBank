@@ -1,0 +1,21 @@
+[2022-11-10T12:03:09.222] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:04:20.390] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:04:51.397] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:05:42.215] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:06:12.554] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:10:43.672] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:14:00.648] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:18:08.324] [ERROR] SupportBank.js - Amount field in transaction is not a number so cannot be interpreted as transaction:One Cheeseburger
+[2022-11-10T12:18:08.325] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:27:04.512] [ERROR] SupportBank.js - Amount field in transaction is not a number so cannot be interpreted as transactionTransaction is logged but value is £0.00. Amount given: One Cheeseburger
+[2022-11-10T12:27:04.514] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:27:25.181] [ERROR] SupportBank.js - Amount field in transaction is not a number so cannot be interpreted as transactionTransaction is logged but value is £0.00. Amount given: One Cheeseburger
+[2022-11-10T12:27:25.183] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T12:30:11.956] [TRACE] SupportBank.js - Beginning SupportBank, please keep your arms inside the cart at all times.
+[2022-11-10T12:30:33.733] [TRACE] SupportBank.js - Ending SupportBank, we hope you enjoyed your stay.
+[2022-11-10T12:31:10.462] [TRACE] SupportBank.js - Beginning SupportBank, please keep your arms inside the cart at all times.
+[2022-11-10T12:31:14.934] [TRACE] SupportBank.js - Ending SupportBank, we hope you enjoyed your stay.
+[2022-11-10T12:31:14.942] [ERROR] SupportBank.js - Amount field in transaction is not a number so cannot be interpreted as transactionTransaction is logged but value is £0.00. Amount given: One Cheeseburger
+[2022-11-10T12:31:14.943] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday
+[2022-11-10T14:24:30.170] [ERROR] SupportBank.js - Amount field in transaction is not a number so cannot be interpreted as transactionTransaction is logged but value is £0.00. Amount given: One Cheeseburger
+[2022-11-10T14:24:30.171] [WARN] SupportBank.js - Transaction has invalid date; it was recorded anyway. Date given: Last Thursday

@@ -2,9 +2,5 @@
   "name": "SupportBank",
   "version": "1.0.0",
   "dependencies": {
-    "csv-parser": "^3.0.0",
-    "log4js": "^6.7.0",
-    "neat-csv": "^7.0.0",
-    "readline-sync": "^1.4.10"
   }
 }

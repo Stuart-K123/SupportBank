@@ -15,18 +15,29 @@ const logger = log4js.getLogger('SupportBank.js')
 const csv = require('csv-parser')
 const fs = require('fs')
 const readlineSync = require('readline-sync')
+const moment = require('moment')
 
-const file_name = "Transactions2014.csv"
-
-let transactions = []
+const file_name = "DodgyTransactions2015.csv"
 
 class transaction {
     constructor(date, from, to, narrative, amount) {
-        this.date = date
+        let _date = moment(date, "DD MM YYYY")
+        if (! _date.isValid()) {
+            logger.warn("Transaction has invalid date; it was recorded anyway. Date given: " + date)
+        }
+        this.date = _date
         this.from = from
         this.to = to
         this.narrative = narrative
-        this.amount = amount
+        let _amount = +amount
+        if (isNaN(_amount)) {
+            logger.error("Amount field in transaction is not a number so cannot be interpreted as transaction"
+                + "Transaction is logged but value is £0.00. Amount given: " + amount)
+            this.amount = 0.0
+        }
+        else {
+            this.amount = _amount
+        }
     }
 
     static from_object(object) {
@@ -34,17 +45,15 @@ class transaction {
         let from = object.From
         let to = object.To
         let narrative = object.Narrative
-        let amount = +object.Amount
-        if (amount == NaN) {
-            logger.warn("Amount field in transaction is not a number so cannot be interpreted as transaction:", object)
-            return -1
-        }
+        let amount = object.Amount
+
         return new transaction(date, from, to, narrative, amount)
     }
 }
 
 function transactions_from_csv() {
     return new Promise(function (resolve, reject) {
+        let transactions = []
         fs.createReadStream(file_name)
             .pipe(csv())
             .on('data', (data) => {transactions.push(transaction.from_object(data))})
@@ -159,9 +168,10 @@ function get_account(transactions, name) {
     return account
 }
 
-// List all functionality
+// Top level functions
 function list_all() {
     transactions_from_csv().then((transactions) => {
+        // console.log(transactions)
         let accounts = get_all_accounts(transactions)
         accounts.forEach((account) => {account.print_balance()})
     })
@@ -176,6 +186,7 @@ function list_account(name) {
 }
 
 function main() {
+    logger.trace("Beginning SupportBank, please keep your arms inside the cart at all times.")
     console.log("Hi! how would you like to inspect the transactions?")
     let user_input = readlineSync.question("\"List All\", \"List [Name]\", or \"exit\": ")
     if (user_input == "List All") {
@@ -187,6 +198,7 @@ function main() {
     else if (user_input == "exit") {
         return
     }
+    logger.trace("Ending SupportBank, we hope you enjoyed your stay.")
 }
 
 main()
